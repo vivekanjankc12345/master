@@ -39,10 +39,10 @@ const activitySchema = yup.object({
     }),
   durationMinutes: yup
     .number()
+    .transform((v, o) => (o === "" ? undefined : v))
     .typeError("Duration must be a number")
     .positive("Duration must be positive")
     .integer("Duration must be in minutes")
-    .nullable()
     .optional(),
   location: yup.string().max(120, "Location too long").nullable().optional(),
   outcome: yup.string().max(250, "Outcome too long").nullable().optional(),
@@ -61,7 +61,11 @@ const defaultActivityValues = {
 const typeOptions = [
   { value: "note", label: "Note", helper: "Quick updates or reminders" },
   { value: "call", label: "Call", helper: "Log phone conversations" },
-  { value: "meeting", label: "Meeting", helper: "Track in-person/virtual meets" },
+  {
+    value: "meeting",
+    label: "Meeting",
+    helper: "Track in-person/virtual meets",
+  },
 ];
 
 const LeadDetails = () => {
@@ -144,7 +148,9 @@ const LeadDetails = () => {
       toast.success("Activity logged");
       reset({ ...defaultActivityValues, type: values.type });
     } catch (err) {
-      toast.error(err?.response?.data?.message || err?.message || "Failed to log activity");
+      toast.error(
+        err?.response?.data?.message || err?.message || "Failed to log activity"
+      );
     }
   };
 
@@ -194,7 +200,9 @@ const LeadDetails = () => {
 
             <div className="flex items-center gap-3">
               <User className="text-gray-500" size={18} />
-              <span>Assigned To: {lead.assignedTo?.name ?? "Not Assigned"}</span>
+              <span>
+                Assigned To: {lead.assignedTo?.name ?? "Not Assigned"}
+              </span>
             </div>
 
             <div className="mt-5">
@@ -296,10 +304,14 @@ const LeadDetails = () => {
                 )}
                 <input
                   className="border px-3 py-2 rounded-lg"
-                  placeholder={selectedType === "call" ? "Call outcome" : "Meeting notes"}
+                  placeholder={
+                    selectedType === "call" ? "Call outcome" : "Meeting notes"
+                  }
                   {...register("outcome")}
                 />
-                {(errors.durationMinutes || errors.location || errors.outcome) && (
+                {(errors.durationMinutes ||
+                  errors.location ||
+                  errors.outcome) && (
                   <div className="text-xs text-red-600 md:col-span-3">
                     {errors.durationMinutes?.message ||
                       errors.location?.message ||
@@ -316,7 +328,9 @@ const LeadDetails = () => {
               {...register("description")}
             />
             {errors.description && (
-              <p className="text-xs text-red-600 mb-2">{errors.description.message}</p>
+              <p className="text-xs text-red-600 mb-2">
+                {errors.description.message}
+              </p>
             )}
 
             <div className="flex justify-end">
@@ -363,7 +377,9 @@ const LeadDetails = () => {
                       </div>
 
                       {a.subject && (
-                        <p className="font-semibold text-gray-800">{a.subject}</p>
+                        <p className="font-semibold text-gray-800">
+                          {a.subject}
+                        </p>
                       )}
 
                       <p className="text-gray-700">{a.description}</p>
@@ -406,4 +422,3 @@ const LeadDetails = () => {
 };
 
 export default LeadDetails;
-
