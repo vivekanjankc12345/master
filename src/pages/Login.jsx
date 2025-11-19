@@ -83,7 +83,7 @@ const Login = () => {
             </p>
             <h1 className="text-3xl font-bold mt-2">Sign in to your workspace</h1>
             <p className="text-gray-500 mt-2">
-              Use the seeded credentials from <code>seeds/seedUsers.js</code>
+             for admin login use vivekanjankc12345@gmail.com and password is vivek@anjan77
             </p>
           </div>
 
