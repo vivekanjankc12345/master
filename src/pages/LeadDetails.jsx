@@ -39,12 +39,10 @@ const activitySchema = yup.object({
     }),
   durationMinutes: yup
     .number()
-    .transform((value, originalValue) =>
-      originalValue === "" ? undefined : value
-    )
     .typeError("Duration must be a number")
     .positive("Duration must be positive")
     .integer("Duration must be in minutes")
+    .nullable()
     .optional(),
   location: yup.string().max(120, "Location too long").nullable().optional(),
   outcome: yup.string().max(250, "Outcome too long").nullable().optional(),
@@ -63,11 +61,7 @@ const defaultActivityValues = {
 const typeOptions = [
   { value: "note", label: "Note", helper: "Quick updates or reminders" },
   { value: "call", label: "Call", helper: "Log phone conversations" },
-  {
-    value: "meeting",
-    label: "Meeting",
-    helper: "Track in-person/virtual meets",
-  },
+  { value: "meeting", label: "Meeting", helper: "Track in-person/virtual meets" },
 ];
 
 const LeadDetails = () => {
@@ -141,7 +135,7 @@ const LeadDetails = () => {
       location: values.location || undefined,
       outcome: values.outcome || undefined,
     };
-   
+
     try {
       const { data } = await axiosClient.post(`/activities`, payload);
       dispatch(addActivityRealtime(data));
@@ -176,6 +170,7 @@ const LeadDetails = () => {
       chip: "bg-sky-100 text-sky-700",
     },
   };
+
   return (
     <MainLayout>
       <div className="flex justify-between items-center mb-6">
@@ -199,9 +194,7 @@ const LeadDetails = () => {
 
             <div className="flex items-center gap-3">
               <User className="text-gray-500" size={18} />
-              <span>
-                Assigned To: {lead.assignedTo?.name ?? "Not Assigned"}
-              </span>
+              <span>Assigned To: {lead.assignedTo?.name ?? "Not Assigned"}</span>
             </div>
 
             <div className="mt-5">
@@ -260,13 +253,7 @@ const LeadDetails = () => {
                       ? "bg-indigo-600 text-white border-indigo-600"
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
-                  onClick={() =>
-                    setValue("type", option.value, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                      shouldTouch: true,
-                    })
-                  }
+                  onClick={() => setValue("type", option.value)}
                 >
                   {option.label}
                 </button>
@@ -309,14 +296,10 @@ const LeadDetails = () => {
                 )}
                 <input
                   className="border px-3 py-2 rounded-lg"
-                  placeholder={
-                    selectedType === "call" ? "Call outcome" : "Meeting notes"
-                  }
+                  placeholder={selectedType === "call" ? "Call outcome" : "Meeting notes"}
                   {...register("outcome")}
                 />
-                {(errors.durationMinutes ||
-                  errors.location ||
-                  errors.outcome) && (
+                {(errors.durationMinutes || errors.location || errors.outcome) && (
                   <div className="text-xs text-red-600 md:col-span-3">
                     {errors.durationMinutes?.message ||
                       errors.location?.message ||
@@ -333,16 +316,13 @@ const LeadDetails = () => {
               {...register("description")}
             />
             {errors.description && (
-              <p className="text-xs text-red-600 mb-2">
-                {errors.description.message}
-              </p>
+              <p className="text-xs text-red-600 mb-2">{errors.description.message}</p>
             )}
 
             <div className="flex justify-end">
               <button
-                type="button"
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 disabled:opacity-60"
-                onClick={() => handleSubmit(submitActivity)()}
+                onClick={handleSubmit(submitActivity)}
                 disabled={isSubmitting}
               >
                 <Send size={18} />
@@ -383,9 +363,7 @@ const LeadDetails = () => {
                       </div>
 
                       {a.subject && (
-                        <p className="font-semibold text-gray-800">
-                          {a.subject}
-                        </p>
+                        <p className="font-semibold text-gray-800">{a.subject}</p>
                       )}
 
                       <p className="text-gray-700">{a.description}</p>
@@ -428,3 +406,4 @@ const LeadDetails = () => {
 };
 
 export default LeadDetails;
+

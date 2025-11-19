@@ -82,6 +82,9 @@ const Login = () => {
               Welcome back
             </p>
             <h1 className="text-3xl font-bold mt-2">Sign in to your workspace</h1>
+            <p className="text-gray-500 mt-2">
+              Use the seeded credentials from <code>seeds/seedUsers.js</code>
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

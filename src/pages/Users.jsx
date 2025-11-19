@@ -49,11 +49,11 @@ const Users = () => {
   const handleCreateUser = async (payload) => {
     try {
       setModalLoading(true);
-      let res = await dispatch(createUser(payload)).unwrap();
+      await dispatch(createUser(payload)).unwrap();
       toast.success("User created");
       setOpenModal(false);
     } catch (err) {
-      toast.error(err?.message || "Failed to create user");
+      toast.error(err?.response?.data?.message || err?.message || "Failed to create user");
     } finally {
       setModalLoading(false);
     }
@@ -64,9 +64,7 @@ const Users = () => {
       await dispatch(deleteUser(id)).unwrap();
       toast.success("User removed");
     } catch (err) {
-      toast.error(
-        err?.response?.data?.message || err?.message || "Failed to delete user"
-      );
+      toast.error(err?.response?.data?.message || err?.message || "Failed to delete user");
     }
   };
 
