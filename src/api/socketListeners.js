@@ -7,6 +7,7 @@ import {
   deleteLeadRealtime,
 } from "../store/leadSlice";
 import { addActivityRealtime } from "../store/activitySlice";
+import { addNotification } from "../store/notificationSlice";
 
 /**
  * Call this once after socket is initialized.
@@ -20,7 +21,10 @@ export const setupSocketListeners = () => {
 
   const socket = getSocket();
 
- 
+  socket.on("lead_created", (payload) => {
+    const lead = payload?.lead ?? payload;
+    if (lead) store.dispatch(addLeadRealtime(lead));
+  });
   socket.on("lead_updated", (payload) =>
     store.dispatch(updateLeadRealtime(payload?.lead || payload))
   );
@@ -31,6 +35,12 @@ export const setupSocketListeners = () => {
   socket.on("activity_added", (payload) =>
     store.dispatch(addActivityRealtime(payload?.activity || payload))
   );
+  socket.on("notification_created", (payload) => {
+    const notification = payload?.notification || payload;
+    if (notification) {
+      store.dispatch(addNotification(notification));
+    }
+  });
 
   console.log("Socket listeners attached");
 };

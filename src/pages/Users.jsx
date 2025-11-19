@@ -7,6 +7,7 @@ import { useAuth } from "../hooks/useAuth";
 import { Plus, Trash2 } from "lucide-react";
 import UserModal from "../components/UserModal";
 import DeleteModal from "../components/DeleteModal";
+import toast from "react-hot-toast";
 
 const Users = () => {
   const dispatch = useDispatch();
@@ -15,6 +16,7 @@ const Users = () => {
 
   const [openModal, setOpenModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchUsers());
@@ -42,6 +44,30 @@ const Users = () => {
     if (isAdmin) return true;
     if (isManager && role === "sales") return true;
     return false;
+  };
+
+  const handleCreateUser = async (payload) => {
+    try {
+      setModalLoading(true);
+      let res = await dispatch(createUser(payload)).unwrap();
+      toast.success("User created");
+      setOpenModal(false);
+    } catch (err) {
+      toast.error(err?.message || "Failed to create user");
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    try {
+      await dispatch(deleteUser(id)).unwrap();
+      toast.success("User removed");
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || err?.message || "Failed to delete user"
+      );
+    }
   };
 
   return (
@@ -138,10 +164,8 @@ const Users = () => {
       {openModal && (
         <UserModal
           onClose={() => setOpenModal(false)}
-          onSubmit={(data) => {
-            dispatch(createUser(data));
-            setOpenModal(false);
-          }}
+          onSubmit={handleCreateUser}
+          submitting={modalLoading}
         />
       )}
 
@@ -149,8 +173,8 @@ const Users = () => {
       {deleteId && (
         <DeleteModal
           onClose={() => setDeleteId(null)}
-          onConfirm={() => {
-            dispatch(deleteUser(deleteId));
+          onConfirm={async () => {
+            await handleDeleteUser(deleteId);
             setDeleteId(null);
           }}
         />

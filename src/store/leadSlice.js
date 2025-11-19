@@ -25,20 +25,22 @@ export const deleteLead = createAsyncThunk("leads/delete", async (id) => {
   return id;
 });
 
+const idsEqual = (a, b) => String(a) === String(b);
+
 const leadSlice = createSlice({
   name: "leads",
   initialState: { items: [], loading: false },
   reducers: {
     addLeadRealtime: (s, a) => {
-      const exists = s.items.find((i) => i.id === a.payload.id);
+      const exists = s.items.find((i) => idsEqual(i.id, a.payload.id));
       if (!exists) s.items.unshift(a.payload);
     },
     updateLeadRealtime: (s, a) => {
-      const idx = s.items.findIndex((i) => i.id === a.payload.id);
+      const idx = s.items.findIndex((i) => idsEqual(i.id, a.payload.id));
       if (idx !== -1) s.items[idx] = a.payload;
     },
     deleteLeadRealtime: (s, a) => {
-      s.items = s.items.filter((i) => i.id !== a.payload);
+      s.items = s.items.filter((i) => !idsEqual(i.id, a.payload));
     },
   },
 
@@ -51,14 +53,17 @@ const leadSlice = createSlice({
         s.items = a.payload;
       })
       .addCase(createLead.fulfilled, (s, a) => {
-        s.items.unshift(a.payload);
+        const exists = s.items.find((i) => idsEqual(i.id, a.payload.id));
+        if (!exists) {
+          s.items.unshift(a.payload);
+        }
       })
       .addCase(updateLead.fulfilled, (s, a) => {
-        const idx = s.items.findIndex((i) => i.id === a.payload.id);
+        const idx = s.items.findIndex((i) => idsEqual(i.id, a.payload.id));
         if (idx !== -1) s.items[idx] = a.payload;
       })
       .addCase(deleteLead.fulfilled, (s, a) => {
-        s.items = s.items.filter((i) => i.id !== a.payload);
+        s.items = s.items.filter((i) => !idsEqual(i.id, a.payload));
       });
   },
 });

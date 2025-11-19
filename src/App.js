@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { Toaster } from "react-hot-toast";
 
 import { initSocket } from "./api/socket";
 import { setupSocketListeners } from "./api/socketListeners";
@@ -27,8 +28,10 @@ function App() {
   }, [token]);
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <>
+      <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+      <Routes>
+        <Route path="/login" element={<Login />} />
 
       <Route
         path="/"
@@ -85,11 +88,12 @@ function App() {
       />
 
       {/* fallback */}
-      <Route
-        path="*"
-        element={<Navigate to={token ? "/dashboard" : "/login"} replace />}
-      />
-    </Routes>
+        <Route
+          path="*"
+          element={<Navigate to={token ? "/dashboard" : "/login"} replace />}
+        />
+      </Routes>
+    </>
   );
 }
 

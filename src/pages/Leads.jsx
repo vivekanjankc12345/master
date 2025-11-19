@@ -1,5 +1,6 @@
 // src/pages/Leads.jsx
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -12,6 +13,7 @@ import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
 import LeadModal from "../components/LeadModal";
 import DeleteModal from "../components/DeleteModal";
+import toast from "react-hot-toast";
 
 const Leads = () => {
   const dispatch = useDispatch();
@@ -23,10 +25,17 @@ const Leads = () => {
   const [openModal, setOpenModal] = useState(false);
   const [editLeadData, setEditLeadData] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     dispatch(fetchLeads());
   }, [dispatch]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, filter, leads.length]);
 
   // FILTER + SEARCH
   const filteredLeads = leads.filter((l) => {
@@ -41,9 +50,34 @@ const Leads = () => {
     return matchesStatus && matchesSearch;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const startIndex = (currentPage - 1) * pageSize;
+  const displayedLeads = filteredLeads.slice(startIndex, startIndex + pageSize);
+
   // Role-based permission
   const canEditDelete =
     user?.role === "admin" || user?.role === "manager";
+
+  const handleLeadSubmit = async (payload) => {
+    try {
+      setModalLoading(true);
+      if (editLeadData) {
+        await dispatch(
+          updateLead({ id: editLeadData.id, payload })
+        ).unwrap();
+        toast.success("Lead updated");
+      } else {
+        await dispatch(createLead(payload)).unwrap();
+        toast.success("Lead created");
+      }
+      setOpenModal(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || "Failed to save lead");
+    } finally {
+      setModalLoading(false);
+    }
+  };
 
   return (
     <MainLayout>
@@ -89,8 +123,9 @@ const Leads = () => {
       </div>
 
       {/* LEAD TABLE */}
-      <div className="bg-white shadow rounded-xl overflow-hidden">
-        <table className="w-full text-left">
+      <div className="bg-white shadow rounded-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
           <thead className="bg-gray-100 border-b">
             <tr>
               <th className="p-3">Name</th>
@@ -119,9 +154,16 @@ const Leads = () => {
               </tr>
             )}
 
-            {filteredLeads.map((lead) => (
+            {displayedLeads.map((lead) => (
               <tr key={lead.id} className="border-b hover:bg-gray-50">
-                <td className="p-3">{lead.name}</td>
+                <td className="p-3">
+                  <Link
+                    to={`/leads/${lead.id}`}
+                    className="text-indigo-600 hover:underline font-medium"
+                  >
+                    {lead.name}
+                  </Link>
+                </td>
                 <td className="p-3">{lead.email}</td>
                 <td className="p-3">{lead.phone}</td>
 
@@ -168,7 +210,56 @@ const Leads = () => {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-4">
+        <div className="text-sm text-gray-600">
+          Showing{" "}
+          <span className="font-semibold">
+            {filteredLeads.length === 0 ? 0 : startIndex + 1}-
+            {Math.min(startIndex + pageSize, filteredLeads.length)}
+          </span>{" "}
+          of <span className="font-semibold">{filteredLeads.length}</span> leads
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            className="border rounded-lg px-2 py-1 text-sm"
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+          >
+            {[10, 25, 50].map((size) => (
+              <option key={size} value={size}>
+                {size} / page
+              </option>
+            ))}
+          </select>
+
+          <div className="flex items-center gap-2">
+            <button
+              className="px-3 py-1 border rounded-lg disabled:opacity-40"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Prev
+            </button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              className="px-3 py-1 border rounded-lg disabled:opacity-40"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* CREATE / EDIT MODAL */}
@@ -176,14 +267,8 @@ const Leads = () => {
         <LeadModal
           data={editLeadData}
           onClose={() => setOpenModal(false)}
-          onSubmit={(payload) => {
-            if (editLeadData) {
-              dispatch(updateLead({ id: editLeadData.id, payload }));
-            } else {
-              dispatch(createLead(payload));
-            }
-            setOpenModal(false);
-          }}
+          onSubmit={handleLeadSubmit}
+          submitting={modalLoading}
         />
       )}
 

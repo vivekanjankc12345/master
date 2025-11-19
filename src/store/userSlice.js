@@ -7,10 +7,18 @@ export const fetchUsers = createAsyncThunk("users/get", async () => {
   return data;
 });
 
-export const createUser = createAsyncThunk("users/create", async (payload) => {
-  const { data } = await axiosClient.post("/users", payload);
-  return data;
-});
+export const createUser = createAsyncThunk(
+  "users/create",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosClient.post("/users", payload);
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.response.data);
+    }
+  }
+);
+
 
 export const deleteUser = createAsyncThunk("users/delete", async (id) => {
   await axiosClient.delete(`/users/${id}`);
